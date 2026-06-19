@@ -152,6 +152,6 @@ app.post(
 );
 
 // ── Health check ──────────────────────────────────────────────────────────────
-app.get("/health", (_req, res) => res.json({ status: "ok" }));
+app.get("/api/status", (_req, res) => res.json({ status: "ok" }));
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
