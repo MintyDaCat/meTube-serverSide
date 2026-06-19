@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: video-upload-api
+    runtime: node
+    plan: free          # 512 MB RAM – enough to buffer a release asset in memory
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: GITHUB_OWNER
+        sync: false
+      - key: GITHUB_REPO
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false
