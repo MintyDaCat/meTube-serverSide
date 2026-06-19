@@ -129,22 +129,13 @@ app.post(
       }
 
       // 4. Insert row into Supabase
-      const { data: row, error: dbErr } = await supabase
-        .from("videos")
-        .insert({
-          name,
-          description:    description ?? null,
-          video_url:      videoUrl,
-          thumbnail_url:  thumbnailUrl,
-          github_release: release.html_url,
-          uploaded_at:    new Date().toISOString(),
-        })
-        .select()
-        .single();
+      const { data: rows, error: dbErr } = await supabase
+      .from("videos")
+      .insert({ ... })
+      .select();
 
       if (dbErr) throw new Error(`Supabase insert failed: ${dbErr.message}`);
-
-      return res.status(201).json({ success: true, video: row });
+      return res.status(201).json({ success: true, video: rows[0] });
     } catch (err) {
       console.error(err);
       return res.status(500).json({ error: err.message });
