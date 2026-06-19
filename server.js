@@ -1,5 +1,29 @@
-// Inside your Render server.js file:
+// server.js (Deployed on Render.com)
 
+// ⚡️ THE CRITICAL INITIALIZATION LINES TRIPPED IN THE LOGS ⚡️
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const fetch = require('node-fetch');
+
+const app = express();
+app.use(cors()); // Unlocks frontend cross-origin network requests
+app.use(express.json());
+
+// Configure standard in-memory buffer streaming blocks
+const uploadProcessor = multer({ storage: multer.memoryStorage() });
+
+// ⚠️ DEPLOYMENT SECURITY VAULT: Environment configuration metrics variables
+const SECURE_TOKEN = process.env.GITHUB_SECRET_TOKEN;
+const GITHUB_USER = "MintyDaCat";
+const GITHUB_REPO = "meTube";
+
+// A. LANDING PAGE OVERRIDE ROUTE: Replaces the raw 404 landing block page
+app.get('/', (req, res) => {
+    res.status(200).send("🚀 meTube Secure Cloud Streaming Proxy Server is fully Operational and Active!");
+});
+
+// B. THE AUTOMATED DATA-LOGGING UPLOAD ROUTER
 app.post('/api/secure-upload', uploadProcessor.single('videoFile'), async (req, res) => {
     try {
         if (!req.file || !req.body.title) {
@@ -10,9 +34,7 @@ app.post('/api/secure-upload', uploadProcessor.single('videoFile'), async (req, 
         const titleStr = req.body.title;
         const cleanFileName = `${Date.now()}-${req.file.originalname.replace(/\s+/g, '-').toLowerCase()}`;
         
-        // ========================================================
-        // STAGE 1: STREAM THE VIDEO FILE TO GITHUB
-        // ========================================================
+        // STAGE 1: STREAM THE VIDEO FILE TO GITHUB REPOSITORY FOLDERS
         const videoTargetUrl = `https://github.com{GITHUB_USER}/${GITHUB_REPO}/contents/videos/${cleanFileName}`;
         const base64Video = fileBuffer.toString('base64');
         
@@ -31,12 +53,9 @@ app.post('/api/secure-upload', uploadProcessor.single('videoFile'), async (req, 
         
         const permanentCloudVideoUrl = videoData.content.download_url;
 
-        // ========================================================
-        // STAGE 2: ⚡️ AUTOMATICALLY UPDATE YOUR DATABASE.JSON FILE ⚡️
-        // ========================================================
+        // STAGE 2: AUTOMATICALLY UPDATE YOUR CENTRAL DATABASE.JSON FILE
         const dbApiUrl = `https://github.com{GITHUB_USER}/${GITHUB_REPO}/contents/database.json`;
         
-        // A. Grab the current database file and its tracking SHA commit hash
         const getDbMeta = await fetch(dbApiUrl, { 
             headers: { "Authorization": `token ${SECURE_TOKEN}`, "User-Agent": "meTube-Core" } 
         });
@@ -46,24 +65,22 @@ app.post('/api/secure-upload', uploadProcessor.single('videoFile'), async (req, 
 
         if (getDbMeta.ok) {
             const dbMeta = await getDbMeta.json();
-            currentSha = dbMeta.sha; // Capture the commit hash lock required by GitHub to edit files
-            // Unpack the file out of base64 text
+            currentSha = dbMeta.sha; 
             dbArray = JSON.parse(Buffer.from(dbMeta.content, 'base64').toString('utf-8'));
         }
 
-        // B. Inject your newborn video row directly into the front of the array stack
+        // Inject video parameters row block directly into array stack memory
         dbArray.unshift({
             name: titleStr,
-            thumbnail: "", // Left completely blank to trigger your video snapshot fallback!
+            thumbnail: "", // Triggers your automatic video snapshot fallback!
             src: permanentCloudVideoUrl,
             type: "video"
         });
 
-        // C. Package the updated array back into base64 text formatting
         const updatedJsonString = JSON.stringify(dbArray, null, 2);
         const base64DbPayload = Buffer.from(updatedJsonString, 'utf-8').toString('base64');
 
-        // D. Overwrite your database.json file permanently back to GitHub cloud!
+        // Overwrite and push database.json permanently back to GitHub cloud
         const dbPushResponse = await fetch(dbApiUrl, {
             method: 'PUT',
             headers: { 
@@ -84,7 +101,6 @@ app.post('/api/secure-upload', uploadProcessor.single('videoFile'), async (req, 
             throw new Error(`Database Write Failed: ${dbErrorData.message}`);
         }
 
-        // Send a success signal straight back to your meTube browser client window
         return res.status(200).json({ success: true, downloadUrl: permanentCloudVideoUrl });
 
     } catch (err) {
@@ -92,3 +108,7 @@ app.post('/api/secure-upload', uploadProcessor.single('videoFile'), async (req, 
         res.status(500).json({ success: false, message: err.message || "Automation pipeline failed." });
     }
 });
+
+// Auto-binds Render dynamic network ports
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Proxy Stream Pipeline Active on Port ${PORT}`));
