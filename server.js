@@ -140,12 +140,11 @@ app.post(
           thumbnail_url:  thumbnailUrl,
           github_release: release.html_url,
           uploaded_at:    new Date().toISOString(),
-        })
-        .select();
+      })
+      .select();
+        
+      console.log("Supabase insert result — rows:", rows, "error:", dbErr);
 
-      if (dbErr) {
-        console.error("Supabase insert failed:", dbErr.message);
-      }
 
       // Build the response from data we already have in memory rather
       // than relying solely on the Supabase read-back, so the frontend
