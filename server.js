@@ -131,19 +131,21 @@ app.post(
       // 4. Insert row into Supabase (best effort — don't fail the whole
       //    request if the DB write has an issue, since the video is
       //    already safely on GitHub at this point)
-      const { data: rows, error: dbErr } = await supabase
-        .from("videos")
-        .insert({
-          name,
-          description:    description ?? null,
-          video_url:      videoUrl,
-          thumbnail_url:  thumbnailUrl,
-          github_release: release.html_url,
-          uploaded_at:    new Date().toISOString(),
-      })
-      .select();
-        
-      console.log("Supabase insert result — rows:", rows, "error:", dbErr);
+      const insertPayload = {
+        name,
+        description:    description ?? null,
+        video_url:      videoUrl,
+        thumbnail_url:  thumbnailUrl,
+        github_release: release.html_url,
+        uploaded_at:    new Date().toISOString(),
+      };
+      console.log("Attempting Supabase insert with payload:", JSON.stringify(insertPayload));
+      
+      const insertRes = await supabase.from("videos").insert(insertPayload).select();
+      console.log("Full Supabase response:", JSON.stringify(insertRes, null, 2));
+      
+      const rows = insertRes.data;
+      const dbErr = insertRes.error;
 
 
       // Build the response from data we already have in memory rather
