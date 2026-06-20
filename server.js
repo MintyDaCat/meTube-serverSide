@@ -93,6 +93,7 @@ app.post(
     { name: "thumbnail", maxCount: 1 },
   ]),
   async (req, res) => {
+    console.log("🔥 /api/upload endpoint was hit!", new Date().toISOString());
     try {
       const { name, description } = req.body;
 
