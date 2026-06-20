@@ -96,7 +96,17 @@ app.post(
     try {
       const { name, description } = req.body;
 
-      if (!name)        return res.status(400).json({ error: "name is required" });
+      if (!name)        
+        return res.status(201).json({
+          success: true,
+          video: {
+            name,
+            description: description ?? null,
+            video_url: videoUrl,
+            thumbnail_url: thumbnailUrl,
+            github_release: release.html_url,
+          }
+        });
       if (!req.files?.video)
         return res.status(400).json({ error: "video file is required" });
 
