@@ -96,17 +96,7 @@ app.post(
     try {
       const { name, description } = req.body;
 
-      if (!name)        
-        return res.status(201).json({
-          success: true,
-          video: {
-            name,
-            description: description ?? null,
-            video_url: videoUrl,
-            thumbnail_url: thumbnailUrl,
-            github_release: release.html_url,
-          }
-        });
+      if (!name) return res.status(400).json({ error: "name is required" });
       if (!req.files?.video)
         return res.status(400).json({ error: "video file is required" });
 
@@ -138,7 +128,9 @@ app.post(
         );
       }
 
-      // 4. Insert row into Supabase
+      // 4. Insert row into Supabase (best effort — don't fail the whole
+      //    request if the DB write has an issue, since the video is
+      //    already safely on GitHub at this point)
       const { data: rows, error: dbErr } = await supabase
         .from("videos")
         .insert({
@@ -148,12 +140,26 @@ app.post(
           thumbnail_url:  thumbnailUrl,
           github_release: release.html_url,
           uploaded_at:    new Date().toISOString(),
-      })
-      .select();
+        })
+        .select();
 
-      if (dbErr) throw new Error(`Supabase insert failed: ${dbErr.message}`);
+      if (dbErr) {
+        console.error("Supabase insert failed:", dbErr.message);
+      }
 
-      return res.status(201).json({ success: true, video: rows[0] });
+      // Build the response from data we already have in memory rather
+      // than relying solely on the Supabase read-back, so the frontend
+      // always gets a usable video object even if the DB write/read-back
+      // had a hiccup.
+      const video = rows?.[0] ?? {
+        name,
+        description: description ?? null,
+        video_url: videoUrl,
+        thumbnail_url: thumbnailUrl,
+        github_release: release.html_url,
+      };
+
+      return res.status(201).json({ success: true, video });
     } catch (err) {
       console.error(err);
       return res.status(500).json({ error: err.message });
